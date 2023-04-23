@@ -11,7 +11,7 @@ Simply add placeholders like `{{ssm "path" "option1=value1" }}` in your
 file, where you want it to be replaced by the plugin.
 
 Currently the plugin supports the following options:
-- `region=eu-west-1` - to resolve that parameter in a specific region
+- `region=eu-west-1` - to resolve that parameter in a specific region (if you don't specify it will assume us-east-1 which is default region)
 
 ### Values file
 
@@ -21,13 +21,11 @@ ingress:
   enabled: false
   hosts:
     - service.{{ssm "/exists/subdomain" }}
-    - service1.{{sm "/empty/subdomain" }}
+    - service1.{{sm "/secret" }}
     - service2.{{ssm "/exists/subdomain" "region=eu-west-1" }}
-    - service3.{{smm "subdomain" "region=eu-west-1" }}
+    - service3.{{sm "dbusername" "region=eu-west-1" }}
 
 ```
-
-when you do not want a key to be defined, you can use a condition and an empty default value:
 
 ### Command
 
@@ -76,7 +74,7 @@ helm-ssm is available under the MIT license. See the LICENSE file for more info.
 - go get -u github.com/spf13/cobra
 - go get github.com/aws/aws-sdk-go-v2/aws
 - go get github.com/aws/aws-sdk-go-v2/config
-- go get github.com/aws/aws-sdk-go-v2/service/ssm# helm-ssm-sm
+- go get github.com/aws/aws-sdk-go-v2/service/ssm
 - go get -u github.com/aws/aws-sdk-go-v2/service/secretsmanager
 - go get -u gotest.tools/v3/assert
 - go get github.com/stretchr/testify/assert
