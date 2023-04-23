@@ -5,29 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"strings"
 	"text/template"
 )
 
-var fm = template.FuncMap{
-	"ssm": ssmFunc,
-	"sm":  smFunc,
-}
+var fm template.FuncMap
 
-func ssmFunc(path string) any {
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-	value := getSSMParam(path)
-	return value
-}
-
-func smFunc(key string) string {
-	//value := getSecret(key)
-	return key
-}
-
-func processTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smFlag bool, verbose bool) {
+func ProcessTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smFlag bool, verbose bool, dryRun bool) {
 	if valueFile == "" {
 		log.Println("File path must be provided")
 		return
@@ -36,6 +19,64 @@ func processTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 	content, err := ioutil.ReadFile(valueFile)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if ssmFlag && smFlag {
+		fm = template.FuncMap{
+			"ssm": ssmFunc,
+			"sm":  smFunc,
+		}
+	} else if smFlag {
+		fm = template.FuncMap{
+			"sm": smFunc,
+			"ssm": func(args ...string) string {
+				if len(args[0]) < 1 {
+					return "error: you didn't provide Secrets Manager secret name, you might be put empty string" + args[0]
+				}
+
+				if len(args[1]) < 1 {
+					return "error: you didn't provide region" + args[0]
+				}
+				return "error: you didn't provide --ssm flag despite you've used within the provided values file: " + args[0]
+			},
+		}
+	} else if ssmFlag {
+		fm = template.FuncMap{
+			"ssm": ssmFunc,
+			"sm": func(args ...string) string {
+				if len(args[0]) < 1 {
+					return "error: you didn't provide SSM Parameter key, you might be put empty string" + args[0]
+				}
+
+				if len(args[1]) < 1 {
+					return "error: you didn't provide region" + args[0]
+				}
+				return "error: you didn't provide --sm flag despite you've used within the provided values file: " + args[0]
+			},
+		}
+	} else {
+		fm = template.FuncMap{
+			"ssm": func(args ...string) string {
+				if len(args[0]) < 1 {
+					return "error: you didn't provide SSM Parameter key, you may put empty string" + args[0]
+				}
+
+				if len(args[1]) < 1 {
+					return "error: you didn't provide region" + args[0]
+				}
+				return "error: you didn't provide --ssm flag despite you've used within the provided values file: " + args[0]
+			},
+			"sm": func(args ...string) string {
+				if len(args[0]) < 1 {
+					return "error: you didn't provide SSM Parameter key, you may put empty string" + args[0]
+				}
+
+				if len(args[1]) < 1 {
+					return "error: you didn't provide region" + args[0]
+				}
+				return "error: you didn't provide --sm flag despite you've used within the provided values file: " + args[0]
+			},
+		}
 	}
 
 	// Create template with specified function map
@@ -53,9 +94,14 @@ func processTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 		fmt.Println(string(buf.Bytes()))
 	}
 
-	err = WriteFile(valueFile, string(buf.Bytes()))
-	if err != nil {
-		log.Fatal(err)
+	if !dryRun {
+		err = WriteFile(valueFile, string(buf.Bytes()))
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+	} else {
+		log.Println(string(buf.Bytes()))
 	}
 
 }
