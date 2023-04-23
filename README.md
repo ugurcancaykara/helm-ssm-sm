@@ -32,6 +32,7 @@ when you do not want a key to be defined, you can use a condition and an empty d
 ### Command
 
 ```sh
+$ make install 
 $ helm ssm-sm [flags]
 ```
 
