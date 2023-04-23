@@ -1,0 +1,8 @@
+name: ssm-sm
+version: 0.1.0
+description: Inject AWS SSM parameters and Secrets Manager secrets into Helm values files
+usage: helm ssm-sm [flags] [chart]
+ignoreFlags: false
+useTunnel: false
+command: "$HELM_PLUGIN_DIR/helm-ssm-sm"
+
