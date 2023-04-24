@@ -21,12 +21,15 @@ func ProcessTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 		log.Fatal(err)
 	}
 
-	if ssmFlag && smFlag {
+	var fm template.FuncMap
+
+	switch {
+	case ssmFlag && smFlag:
 		fm = template.FuncMap{
 			"ssm": ssmFunc,
 			"sm":  smFunc,
 		}
-	} else if smFlag {
+	case smFlag:
 		fm = template.FuncMap{
 			"sm": smFunc,
 			"ssm": func(args ...string) string {
@@ -40,7 +43,7 @@ func ProcessTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 				return "error: you didn't provide --ssm flag despite you've used within the provided values file: " + args[0]
 			},
 		}
-	} else if ssmFlag {
+	case ssmFlag:
 		fm = template.FuncMap{
 			"ssm": ssmFunc,
 			"sm": func(args ...string) string {
@@ -54,7 +57,7 @@ func ProcessTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 				return "error: you didn't provide --sm flag despite you've used within the provided values file: " + args[0]
 			},
 		}
-	} else {
+	default:
 		fm = template.FuncMap{
 			"ssm": func(args ...string) string {
 				if len(args[0]) < 1 {
@@ -80,16 +83,15 @@ func ProcessTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 	}
 
 	// Create template with specified function map
-
 	tpl = template.Must(template.New("").Funcs(fm).Parse(string(content)))
+
 	//Execute template and output result to stdout
-
 	var buf bytes.Buffer
-
 	if err := tpl.Execute(&buf, nil); err != nil {
 		log.Fatal(err)
 		return
 	}
+
 	if verbose {
 		fmt.Println(string(buf.Bytes()))
 	}
