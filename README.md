@@ -21,9 +21,9 @@ ingress:
   enabled: false
   hosts:
     - service.{{ssm "/exists/subdomain" }}
-    - service1.{{sm "/secret" }}
+    - service1.{{sm "/acmsecret" }}
     - service2.{{ssm "/exists/subdomain" "region=eu-west-1" }}
-    - service3.{{sm "dbusername" "region=eu-west-1" }}
+    - service3.{{sm "dbendpoint" "region=eu-west-1" }}
 
 ```
 
