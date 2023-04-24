@@ -21,8 +21,6 @@ func ProcessTemplate(tpl *template.Template, valueFile string, ssmFlag bool, smF
 		log.Fatal(err)
 	}
 
-	var fm template.FuncMap
-
 	switch {
 	case ssmFlag && smFlag:
 		fm = template.FuncMap{
